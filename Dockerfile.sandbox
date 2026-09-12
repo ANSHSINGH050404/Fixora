@@ -1,0 +1,9 @@
+# Sandboxed execution environment for untrusted repository code.
+FROM oven/bun:latest
+
+RUN useradd -m -s /bin/sh sandbox
+USER sandbox
+WORKDIR /work
+
+# No network-dependent entrypoint; commands are injected per run.
+ENTRYPOINT ["/bin/sh", "-c"]
