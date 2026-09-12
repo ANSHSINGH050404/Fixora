@@ -59,6 +59,8 @@ How it works: overrides persist to `app_settings` (Postgres) or server memory, t
    applies a validated one-line fix, re-runs tests, reviews, and proposes a PR.
 
 The fixture's tests (`bun run test:fixture`) fail on purpose — they are the bug report made executable.
+Deliberately named `*.repro.ts`: Bun only auto-discovers `.test.`/`.spec.` files, so bare
+`bun test` stays green while the fixture and the agent address the repro by explicit path.
 
 ## Checks
 

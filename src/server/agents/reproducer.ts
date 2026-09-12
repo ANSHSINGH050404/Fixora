@@ -34,23 +34,27 @@ export const reproduceBug = (args: {
     const shortId = ctx.taskId.replace(/[^a-zA-Z0-9]/g, "").slice(-6) || "task";
 
     // 1. Run existing tests that touch the suspected area.
+    // (`.repro.` files are deliberate repro scripts: discoverable by explicit
+    // path, invisible to bare `bun test` scans so fixtures stay red-alone.)
     const testFiles = findings
       .map((f) => f.file)
-      .filter((f) => /\.(test|spec)\.(ts|tsx|js|jsx)$/.test(f));
+      .filter((f) => /\.(test|spec|repro)\.(ts|tsx|js|jsx)$/.test(f));
     const allFiles = yield* toolCall.listFiles(tools, 2000).pipe(
       Effect.map((fs) => [...fs] as string[]),
       Effect.orElseSucceed(() => [] as string[]),
     );
     const relatedTests = allFiles.filter(
       (f) =>
-        /\.(test|spec)\.(ts|tsx|js|jsx)$/.test(f) &&
+        /\.(test|spec|repro)\.(ts|tsx|js|jsx)$/.test(f) &&
         args.analysis.keywords.some((k) => f.toLowerCase().includes(k.toLowerCase())),
     );
     const candidates = [...new Set([...testFiles, ...relatedTests])].slice(0, 3);
 
     for (const testFile of candidates) {
+      // `./` prefix forces path (not filter) semantics so non-`.test.ts`
+      // names like `.repro.ts` still execute.
       const run = yield* toolCall
-        .run(tools, ["bun", "test", testFile], 90_000)
+        .run(tools, ["bun", "test", `./${testFile}`], 90_000)
         .pipe(Effect.orElseSucceed(() => null));
       if (run && run.exitCode !== 0) {
         return {
@@ -81,7 +85,7 @@ export const reproduceBug = (args: {
       createdFiles.push(rel);
 
       const run = yield* toolCall
-        .run(tools, ["bun", "test", rel], 90_000)
+        .run(tools, ["bun", "test", `./${rel}`], 90_000)
         .pipe(Effect.orElseSucceed(() => null));
       if (run) {
         const failed = run.exitCode !== 0;

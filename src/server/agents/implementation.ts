@@ -27,8 +27,9 @@ const MAX_APR_CANDIDATES = 12;
  * Strategy:
  * 1. LLM-proposed edits (when configured), applied only on exact single match.
  * 2. Generate-and-validate APR mutations near the evidence lines.
- * Every candidate must keep the working tree green for the given validation
- * command; otherwise it is reverted. Unverifiable candidates are rejected.
+ * Every candidate must keep the working tree green for the repository's own
+ * test command AND every generated repro file; otherwise it is reverted.
+ * Unverifiable candidates are rejected.
  */
 export const implementFix = (args: {
   ctx: AgentContext;
@@ -37,6 +38,8 @@ export const implementFix = (args: {
   rootCause: Hypothesis;
   evidenceLines: Array<{ file: string; line?: number }>;
   validateCommand: string[];
+  /** Generated repro scripts that must also stay green (explicit `./` paths). */
+  extraTestFiles: string[];
 }): Effect.Effect<ImplementationResult, AgentStageError, LLMService> =>
   Effect.gen(function* () {
     const llm = yield* LLMService;
@@ -68,8 +71,12 @@ export const implementFix = (args: {
     candidates.push(...generateAprCandidates(contents, args.evidenceLines));
 
     const applied: FileEdit[] = [];
+    const validationRuns: string[][] = [
+      args.validateCommand,
+      ...args.extraTestFiles.map((f) => ["bun", "test", `./${f}`]),
+    ];
     for (const candidate of candidates.slice(0, MAX_APR_CANDIDATES + 3)) {
-      const ok = yield* tryCandidate(ctx.root, tools, candidate, args.validateCommand).pipe(
+      const ok = yield* tryCandidate(ctx.root, tools, candidate, validationRuns).pipe(
         Effect.orElseSucceed(() => false),
       );
       if (ok) {
@@ -92,7 +99,7 @@ export const implementFix = (args: {
     return { edits: applied, diff, method };
   });
 
-const FORBIDDEN = [/node_modules/, /\.next\//, /\/dist\//, /\.env$/, /bun\.lockb?$/, /package-lock\.json$/, /\.min\.js$/, /\.(test|spec)\.[a-z]+$/, /^repro-.*\.test\.[a-z]+$/];
+const FORBIDDEN = [/node_modules/, /\.next\//, /\/dist\//, /\.env$/, /bun\.lockb?$/, /package-lock\.json$/, /\.min\.js$/, /\.(test|spec|repro)\.[a-z]+$/, /^repro-.*\.test\.[a-z]+$/];
 const isForbiddenTarget = (f: string): boolean =>
   f.startsWith("/") || f.includes("..") || FORBIDDEN.some((re) => re.test(f));
 
@@ -207,12 +214,12 @@ const countOccurrences = (haystack: string, needle: string): number => {
   return count;
 };
 
-/** Apply one candidate, run validation, revert on failure. */
+/** Apply one candidate, run every validation command, revert on any failure. */
 const tryCandidate = (
   root: string,
   tools: ToolRegistry,
   candidate: CandidateEdit,
-  validateCommand: string[],
+  validateCommands: string[][],
 ): Effect.Effect<boolean, never> =>
   Effect.gen(function* () {
     const current = yield* toolCall.readFile(tools, candidate.path).pipe(
@@ -235,10 +242,16 @@ const tryCandidate = (
     }).pipe(Effect.orElseSucceed(() => false));
     if (!written) return false;
 
-    const run = yield* toolCall
-      .run(tools, validateCommand, 120_000)
-      .pipe(Effect.orElseSucceed(() => null));
-    if (run && run.exitCode === 0) return true;
+    const run = yield* Effect.gen(function* () {
+      for (const cmd of validateCommands) {
+        const r = yield* toolCall
+          .run(tools, cmd, 120_000)
+          .pipe(Effect.orElseSucceed(() => null));
+        if (!r || r.exitCode !== 0) return null;
+      }
+      return true;
+    }).pipe(Effect.orElseSucceed(() => null));
+    if (run) return true;
 
     // Revert.
     yield* Effect.promise(async () => {

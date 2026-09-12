@@ -270,7 +270,6 @@ export const runTask = (
         hypotheses,
       }).pipe(Effect.mapError((e) => new AgentStageError({ stage: "BUG_REPRODUCTION", message: String(e) }))));
       const reproduction: ReproductionResult = repro.result;
-      void repro;
 
       // --- 6. Root cause ---------------------------------------------------
       const rootCauseOut = yield* stage(task, "ANALYZING_ROOT_CAUSE", { reproduced: reproduction.reproduced }, analyzeRootCause({
@@ -297,7 +296,9 @@ export const runTask = (
       }).pipe(Effect.mapError((e) => new AgentStageError({ stage: "FIX_PLANNING", message: String(e) }))));
 
       // --- 8-10. Implement → test → review with self-repair loop ----------
-      const validateCommand = ["bun", "test"] as string[];
+      // Validate against the repository's own test command (covers explicitly
+      // addressed repro files like `.repro.ts`, which bare scans skip).
+      const validateCommand = [map.testCommand.split(" ")[0], ...map.testCommand.split(" ").slice(1)];
       let verdicts: TestVerdict[] = [];
       let review: ReviewResult | null = null;
       let diff = "";
@@ -313,6 +314,7 @@ export const runTask = (
           rootCause: rootCauseOut.confirmed,
           evidenceLines: findings.slice(0, 6).map((f) => ({ file: f.file, line: f.line ?? undefined })),
           validateCommand,
+          extraTestFiles: repro.createdFiles,
         }).pipe(
           Effect.mapError((e) => new AgentStageError({ stage: "IMPLEMENTATION", message: e.message })),
         ));

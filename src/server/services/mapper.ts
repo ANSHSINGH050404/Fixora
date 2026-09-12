@@ -76,7 +76,7 @@ export const scoreRelevance = (file: string, keywords: readonly string[]): numbe
     const parts = lower.split(/[/_.-]/);
     if (parts.includes(k)) score += 2;
   }
-  if (/\.(test|spec)\./.test(lower)) score += 1;
+  if (/\.(test|spec|repro)\./.test(lower)) score += 1;
   if (/(index|main|server|worker|client|route|handler)/.test(lower)) score += 1;
   if (/node_modules|dist|\.next|coverage/.test(lower)) score -= 100;
   return score;

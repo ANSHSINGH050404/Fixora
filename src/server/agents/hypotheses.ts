@@ -64,7 +64,7 @@ const buildDeterministic = (
   historyNotes: string[],
 ): Hypothesis[] => {
   // Prefer source files for titles — test files are evidence, not suspects.
-  const isTest = (f: string): boolean => /\.(test|spec)\.[a-z]+$/.test(f);
+  const isTest = (f: string): boolean => /\.(test|spec|repro)\.[a-z]+$/.test(f);
   const ordered = [...findings].sort(
     (a, b) => Number(isTest(a.file)) - Number(isTest(b.file)) || b.score - a.score,
   );

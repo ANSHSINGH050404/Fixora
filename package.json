@@ -9,7 +9,7 @@
     "lint": "eslint",
     "test": "bun test tests/",
     "test:watch": "bun test --watch tests/",
-    "test:fixture": "bun test demo-fixture/",
+    "test:fixture": "bun test ./demo-fixture/cache-bug/repro/cache.repro.ts",
     "typecheck": "tsc --noEmit",
     "db:generate": "bunx drizzle-kit generate",
     "db:migrate": "bunx drizzle-kit migrate",

@@ -72,6 +72,6 @@ export const planFix = (args: {
 const isNonSourceTarget = (f: string): boolean =>
   f.startsWith("/") ||
   f.includes("..") ||
-  /\.(test|spec)\.[a-z]+$/.test(f) ||
+  /\.(test|spec|repro)\.[a-z]+$/.test(f) ||
   /^repro-.*\.test\.[a-z]+$/.test(f.split("/").pop() ?? "") ||
   /node_modules|\.next\/|\/dist\/|\.env$|bun\.lockb?$|package-lock\.json$|\.min\.js$|package\.json$/.test(f);
