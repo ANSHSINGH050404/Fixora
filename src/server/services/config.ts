@@ -27,7 +27,7 @@ const makeConfig = Effect.gen(function* () {
     Config.withDefault("qwen3:8b"),
   );
   const workspaceDir = yield* Config.string("WORKSPACE_DIR").pipe(
-    Config.withDefault("C:\\Users\\ANSHSI~1\\AppData\\Local\\Temp\\opencode\\maintainer-os-work"),
+    Config.withDefault("C:\\Users\\ANSHSI~1\\AppData\\Local\\Temp\\opencode\\fixora-work"),
   );
   const sandboxTimeoutMs = yield* Config.integer(
     "SANDBOX_TIMEOUT_MS",
@@ -47,9 +47,9 @@ const makeConfig = Effect.gen(function* () {
     llmModel: orDefault(llmModel, "qwen3:8b"),
     workspaceDir: orDefault(
       workspaceDir,
-      "C:\\Users\\ANSHSI~1\\AppData\\Local\\Temp\\opencode\\maintainer-os-work",
+      "C:\\Users\\ANSHSI~1\\AppData\\Local\\Temp\\opencode\\fixora-work",
     ),
-    sandboxImage: "maintainer-os-sandbox:latest",
+    sandboxImage: "fixora-sandbox:latest",
     sandboxTimeoutMs,
     maxRepairAttempts: 3,
   };
@@ -71,8 +71,8 @@ export const makeAppConfigLayer = (overrides: Partial<AppConfig> = {}) =>
     llmApiKey: undefined,
     llmModel: "test-model",
     workspaceDir:
-      "C:\\Users\\ANSHSI~1\\AppData\\Local\\Temp\\opencode\\maintainer-os-test",
-    sandboxImage: "maintainer-os-sandbox:latest",
+      "C:\\Users\\ANSHSI~1\\AppData\\Local\\Temp\\opencode\\fixora-test",
+    sandboxImage: "fixora-sandbox:latest",
     sandboxTimeoutMs: 30_000,
     maxRepairAttempts: 3,
     ...overrides,

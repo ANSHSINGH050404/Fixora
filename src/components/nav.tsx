@@ -16,7 +16,7 @@ export function Nav() {
           <span className="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-500 text-zinc-950">
             <Bot size={18} strokeWidth={2.5} />
           </span>
-          MaintainerOS
+          Fixora
         </Link>
         <nav className="flex items-center gap-1">
           {LINKS.map((l) => (

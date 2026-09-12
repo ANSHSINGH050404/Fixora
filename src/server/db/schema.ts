@@ -7,7 +7,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-/** Users of MaintainerOS (owner of tasks / GitHub token vault metadata). */
+/** Users of Fixora (owner of tasks / GitHub token vault metadata). */
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: text("email").notNull().unique(),

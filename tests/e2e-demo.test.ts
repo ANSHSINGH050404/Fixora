@@ -12,7 +12,7 @@ import { testEnv } from "./helpers";
 const fixtureDir = `${import.meta.dir}/../demo-fixture/cache-bug`;
 
 const TestConfig = makeAppConfigLayer({
-  workspaceDir: `C:\\Users\\ANSHSI~1\\AppData\\Local\\Temp\\opencode\\maintainer-os-e2e`,
+  workspaceDir: `C:\\Users\\ANSHSI~1\\AppData\\Local\\Temp\\opencode\\fixora-e2e`,
 });
 const TestEnv = testEnv(TestConfig);
 const TestLive = Layer.mergeAll(
@@ -26,7 +26,7 @@ const TestLive = Layer.mergeAll(
 
 afterAll(async () => {
   const fs = await import("node:fs/promises");
-  await fs.rm(`C:\\Users\\ANSHSI~1\\AppData\\Local\\Temp\\opencode\\maintainer-os-e2e`, { recursive: true, force: true });
+  await fs.rm(`C:\\Users\\ANSHSI~1\\AppData\\Local\\Temp\\opencode\\fixora-e2e`, { recursive: true, force: true });
 });
 
 describe("end-to-end demo: cache reconnect bug", () => {

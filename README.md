@@ -1,4 +1,4 @@
-# MaintainerOS
+# Fixora
 
 An autonomous AI open-source maintainer. Give it a **GitHub repository + issue** and it works the complete
 engineering lifecycle — visibly, as structured agent stages, not as a black-box code generator:

@@ -131,7 +131,7 @@ const classifyFailure = (
   command: string[],
 ): Effect.Effect<NonNullable<TestVerdict["failureClass"]>, never> =>
   Effect.gen(function* () {
-    const stash = yield* spawnCapture("git", ["stash", "push", "-m", "maintainer-os-classify"], {
+    const stash = yield* spawnCapture("git", ["stash", "push", "-m", "fixora-classify"], {
       cwd: root,
       timeoutMs: 30_000,
     }).pipe(Effect.map((r) => r.code === 0));

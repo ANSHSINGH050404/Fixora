@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MaintainerOS — Autonomous Open-Source Maintainer",
+  title: "Fixora — Autonomous Open-Source Maintainer",
   description: "An AI agent that investigates GitHub issues end-to-end: reproduce, fix, test, review, and propose a PR.",
 };
 
@@ -28,7 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Nav />
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
         <footer className="border-t border-zinc-800 py-4 text-center font-mono text-xs text-zinc-600">
-          MaintainerOS — autonomous engineering, human-approved PRs
+          Fixora — autonomous engineering, human-approved PRs
         </footer>
       </body>
     </html>

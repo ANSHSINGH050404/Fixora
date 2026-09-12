@@ -76,7 +76,7 @@ export const finalizePR = (
       if (!status) {
         return yield* Effect.fail(new GitHubError({ message: "working tree clean — nothing to publish", endpoint: "git" }));
       }
-      yield* git(["-c", "user.email=maintainer-os@local", "-c", "user.name=MaintainerOS", "commit", "-m", "fix from MaintainerOS PR proposal"]);
+      yield* git(["-c", "user.email=fixora@local", "-c", "user.name=Fixora", "commit", "-m", "fix from Fixora PR proposal"]);
       // Push via token-injected remote (token never logged).
       const push = yield* Effect.flatMap(
         spawnCapture(

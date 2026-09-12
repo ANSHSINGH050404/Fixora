@@ -7,7 +7,7 @@ export default function Home() {
       <div className="max-w-2xl">
         <p className="font-mono text-xs uppercase tracking-widest text-emerald-400">autonomous software engineering</p>
         <h1 className="mt-3 text-4xl font-bold leading-tight text-zinc-50">
-          MaintainerOS investigates your GitHub issues end-to-end.
+          Fixora investigates your GitHub issues end-to-end.
         </h1>
         <p className="mt-4 text-lg text-zinc-400">
           Give it a repository and an issue. It maps the codebase, forms hypotheses,

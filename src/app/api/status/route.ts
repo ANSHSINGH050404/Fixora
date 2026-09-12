@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 // Mirrors the sandbox default image (see SandboxService). Docker isolation is
 // reported only when the daemon responds AND the image exists locally.
-const SANDBOX_IMAGE = "maintainer-os-sandbox:latest";
+const SANDBOX_IMAGE = "fixora-sandbox:latest";
 
 /**
  * Environment capability report for the Settings page. Never returns secrets —
