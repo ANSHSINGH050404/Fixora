@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: maintainer
+      POSTGRES_PASSWORD: maintainer
+      POSTGRES_DB: maintaineros
+    ports:
+      - "5432:5432"
+    volumes:
+      - maintaineros-pg:/var/lib/postgresql/data
+
+volumes:
+  maintaineros-pg:
