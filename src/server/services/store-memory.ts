@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { Context, Effect, Layer, Ref } from "effect";
 import { StoreError } from "../domain/errors";
 import { transition as validateTransition } from "../domain/state-machine";
@@ -31,6 +32,8 @@ export interface TaskRecord {
   readonly attempt: number;
   readonly summary: string | null;
   readonly error: string | null;
+  readonly isPublic: number;
+  readonly shareToken: string | null;
   readonly createdAt: string;
   readonly updatedAt: string;
 }
@@ -150,6 +153,13 @@ export interface TaskStoreApi {
     reason?: string,
   ) => Effect.Effect<TaskRecord, StoreError>;
   readonly setStage: (taskId: string, stage: string | null) => Effect.Effect<void, StoreError>;
+  /**
+   * Toggle public sharing. Enabling mints a stable unguessable share token
+   * (kept across disable/enable); returns the token when public, null when private.
+   */
+  readonly setTaskPublic: (taskId: string, isPublic: boolean) => Effect.Effect<string | null, StoreError>;
+  /** Capability lookup for public pages; fails when unknown OR not public. */
+  readonly getTaskByShareToken: (token: string) => Effect.Effect<TaskRecord, StoreError>;
   readonly incrementAttempt: (taskId: string) => Effect.Effect<number, StoreError>;
   readonly failTask: (taskId: string, error: string) => Effect.Effect<void, StoreError>;
   readonly beginStep: (
@@ -252,6 +262,9 @@ const nid = (state: MemoryState, prefix: string): string =>
 
 const nowIso = (): string => new Date().toISOString();
 
+/** Unguessable capability token for public share links (128-bit hex). */
+const newShareToken = (): string => randomBytes(16).toString("hex");
+
 const notFound = (op: string, id: string) =>
   new StoreError({ message: `not found: ${id}`, operation: op });
 
@@ -292,6 +305,8 @@ export const TaskStoreMemoryLive: Layer.Layer<TaskStore> = Layer.effect(
             attempt: 0,
             summary: null,
             error: null,
+            isPublic: 0,
+            shareToken: null,
             createdAt: nowIso(),
             updatedAt: nowIso(),
           };
@@ -371,6 +386,23 @@ export const TaskStoreMemoryLive: Layer.Layer<TaskStore> = Layer.effect(
           const t = s.tasks.get(taskId);
           if (t) s.tasks.set(taskId, { ...t, currentStage: stage, updatedAt: nowIso() });
           return s;
+        }),
+      setTaskPublic: (taskId, isPublic) =>
+        Effect.flatMap(Ref.get(ref), (s) => {
+          const t = s.tasks.get(taskId);
+          if (!t) return Effect.fail(notFound("setTaskPublic", taskId));
+          return ref.modify((s2) => {
+            const cur = s2.tasks.get(taskId);
+            if (!cur) return [null, s2] as const;
+            const token = cur.shareToken ?? (isPublic ? newShareToken() : null);
+            s2.tasks.set(taskId, { ...cur, isPublic: isPublic ? 1 : 0, shareToken: token, updatedAt: nowIso() });
+            return [isPublic ? token : null, s2] as const;
+          });
+        }),
+      getTaskByShareToken: (token) =>
+        Effect.flatMap(Ref.get(ref), (s) => {
+          const t = [...s.tasks.values()].find((x) => x.shareToken === token && x.isPublic === 1);
+          return t ? Effect.succeed(t) : Effect.fail(notFound("getTaskByShareToken", "shared task"));
         }),
       incrementAttempt: (taskId) =>
         ref.modify((s) => {

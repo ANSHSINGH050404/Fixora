@@ -63,6 +63,9 @@ export const agentTasks = pgTable("agent_tasks", {
   attempt: integer("attempt").notNull().default(0),
   // Token never stored in plaintext-adjacent columns; kept only in memory per run.
   hasUserToken: integer("has_user_token").notNull().default(0),
+  // Public sharing: unguessable capability token; only shared when isPublic.
+  isPublic: integer("is_public").notNull().default(0),
+  shareToken: text("share_token").unique(),
   summary: text("summary"),
   error: text("error"),
   createdAt: timestamp("created_at", { withTimezone: true })

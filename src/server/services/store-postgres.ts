@@ -1,6 +1,7 @@
 import { desc, eq } from "drizzle-orm";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { Effect, Layer } from "effect";
+import { randomBytes } from "node:crypto";
 import postgres from "postgres";
 import * as schema from "../db/schema";
 import { StoreError } from "../domain/errors";
@@ -30,6 +31,8 @@ const toTask = (r: typeof schema.agentTasks.$inferSelect): TaskRecord => ({
   attempt: r.attempt,
   summary: r.summary,
   error: r.error,
+  isPublic: r.isPublic,
+  shareToken: r.shareToken,
   createdAt: r.createdAt.toISOString(),
   updatedAt: r.updatedAt.toISOString(),
 });
@@ -127,6 +130,23 @@ export const TaskStorePostgresLive: Layer.Layer<TaskStore, never, AppConfigServi
           }),
         setStage: (taskId, stage) =>
           Effect.as(wrap("setStage", db.update(schema.agentTasks).set({ currentStage: stage, updatedAt: new Date() }).where(eq(schema.agentTasks.id, taskId))), undefined),
+        setTaskPublic: (taskId, isPublic) =>
+          Effect.gen(function* () {
+            const current = yield* api.getTask(taskId);
+            const token = current.shareToken ?? (isPublic ? randomBytes(16).toString("hex") : null);
+            const [updated] = yield* wrap(
+              "setTaskPublic",
+              db.update(schema.agentTasks).set({ isPublic: isPublic ? 1 : 0, shareToken: token, updatedAt: new Date() }).where(eq(schema.agentTasks.id, taskId)).returning(),
+            );
+            return isPublic ? updated.shareToken : null;
+          }),
+        getTaskByShareToken: (token) =>
+          Effect.gen(function* () {
+            const rows = yield* wrap("getTaskByShareToken", db.select().from(schema.agentTasks).where(eq(schema.agentTasks.shareToken, token)));
+            const row = rows.find((r) => r.isPublic === 1);
+            if (!row) return yield* Effect.fail(new StoreError({ message: "not found: shared task", operation: "getTaskByShareToken" }));
+            return toTask(row);
+          }),
         incrementAttempt: (taskId) =>
           Effect.gen(function* () {
             const t = yield* api.getTask(taskId);
